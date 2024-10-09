@@ -1,5 +1,5 @@
-const puppeteer = require('puppeteer').default
-const genericPool = require('generic-pool')
+const puppeteer = require("puppeteer").default;
+const genericPool = require("generic-pool");
 
 /**
  * 初始化一个 Puppeteer 池
@@ -16,92 +16,95 @@ const genericPool = require('generic-pool')
  * @param {Object} [options.otherConfig={}] 剩余的其他参数 // For all opts, see opts at https://github.com/coopernurse/node-pool#createpool
  */
 const initPuppeteerPool = (options = {}) => {
-  const {
-    max = 6,
-    min = 2,
-    maxUses = 2048,
-    testOnBorrow = true,
-    autostart = false,
-    idleTimeoutMillis = 3600000,
-    evictionRunIntervalMillis = 180000,
-    puppeteerArgs = {},
-    validator = () => Promise.resolve(true),
-    ...otherConfig
-  } = options
+	const {
+		max = 6,
+		min = 2,
+		maxUses = 2048,
+		testOnBorrow = true,
+		autostart = false,
+		idleTimeoutMillis = 3600000,
+		evictionRunIntervalMillis = 180000,
+		puppeteerArgs = {},
+		validator = () => Promise.resolve(true),
+		...otherConfig
+	} = options;
 
-  const pool = genericPool.createPool({
-    create: () =>
-      puppeteer.launch(puppeteerArgs).then((instance) => {
-        // 创建一个 puppeteer 实例 ，并且初始化使用次数为 0
-        instance.useCount = 0
-        return instance
-      }),
-    /**
-     * @param {import("puppeteer").Browser} instance
-     */
-    destroy: (instance) => {
-      instance.close()
-    },
-    /**
-     * @param {import("puppeteer").Browser} instance
-     */
-    validate: (instance) => {
-      // 执行一次自定义校验，并且校验校验 实例已使用次数。 当 返回 reject 时 表示实例不可用
-      return validator(instance).then((valid) =>
-        Promise.resolve(valid && (maxUses <= 0 || instance.useCount < maxUses))
-      )
-    }
-  }, {
-    max,
-    min,
-    testOnBorrow,
-    autostart,
-    idleTimeoutMillis,
-    evictionRunIntervalMillis,
-    ...otherConfig
-  })
-  const genericAcquire = pool.acquire.bind(pool)
-  // 重写了原有池的消费实例的方法。添加一个实例使用次数的增加
-  pool.acquire = () =>
-    genericAcquire().then((instance) => {
-      instance.useCount += 1
-      return instance
-    })
-  pool.use = (fn) => {
-    let resource
-    return pool
-      .acquire()
-      .then((r) => {
-        resource = r
-        return resource
-      })
-      .then(fn)
-      .then(
-        (result) => {
-          // 不管业务方使用实例成功与后都表示一下实例消费完成
-          pool.release(resource)
-          return result
-        },
-        (err) => {
-          pool.release(resource)
-          throw err
-        }
-      )
-  }
-  process.on('SIGINT', () => {
-    pool
-      .drain()
-      .then(() => pool.clear())
-      .then(
-        () => {
-          process.exit(0)
-        },
-        () => {
-          process.exit(1)
-        }
-      )
-  })
-  return pool
-}
+	const pool = genericPool.createPool({
+		create: () =>
+			puppeteer.launch(puppeteerArgs)
+				.then(instance => {
+					// 创建一个 puppeteer 实例 ，并且初始化使用次数为 0
+					instance.useCount = 0;
+					return instance;
+				}),
+		/**
+	 * @param {import("puppeteer").Browser} instance
+	 */
+		destroy: instance => {
+			instance.close();
+		},
+		/**
+	 * @param {import("puppeteer").Browser} instance
+	 */
+		validate: instance => {
+			// 执行一次自定义校验，并且校验校验 实例已使用次数。 当 返回 reject 时 表示实例不可用
+			return validator(instance)
+				.then(valid =>
+					Promise.resolve(valid && (maxUses <= 0 || instance.useCount < maxUses))
+				);
+		}
+	}, {
+		max,
+		min,
+		testOnBorrow,
+		autostart,
+		idleTimeoutMillis,
+		evictionRunIntervalMillis,
+		...otherConfig
+	});
+	const genericAcquire = pool.acquire.bind(pool);
+	// 重写了原有池的消费实例的方法。添加一个实例使用次数的增加
+	pool.acquire = () =>
+		genericAcquire()
+			.then(instance => {
+				instance.useCount += 1;
+				return instance;
+			});
+	pool.use = fn => {
+		let resource;
+		return pool
+			.acquire()
+			.then(r => {
+				resource = r;
+				return resource;
+			})
+			.then(fn)
+			.then(
+				result => {
+					// 不管业务方使用实例成功与后都表示一下实例消费完成
+					pool.release(resource);
+					return result;
+				},
+				err => {
+					pool.release(resource);
+					throw err;
+				}
+			);
+	};
+	process.on("SIGINT", () => {
+		pool
+			.drain()
+			.then(() => pool.clear())
+			.then(
+				() => {
+					process.exit(0);
+				},
+				() => {
+					process.exit(1);
+				}
+			);
+	});
+	return pool;
+};
 
-module.exports = initPuppeteerPool
+module.exports = initPuppeteerPool;

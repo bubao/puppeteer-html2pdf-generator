@@ -23,13 +23,17 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 
 // catch 404 and forward to error handler
-
+app.use((req, res) => {
+	res.status(404)
+		.send("404");
+});
 // error handler
-app.use(function ErrorHandler(err, req, res) {
+// eslint-disable-next-line no-unused-vars
+app.use(function ErrorHandler(err, req, res, next) {
 	const error = errcode(err.errcode);
 	console.log(err);
-	res.status(error.status)
-		.send({ ...error.body, ...(err.name === "MyError" ? err.resBody : {}) });
+	res.status(error.status);
+	res.send({ ...error.body, ...(err.name === "MyError" ? err.resBody : {}) });
 });
 
 module.exports = app;

@@ -1,10 +1,3 @@
-/**
- * @Description: 
- * @Author: bubao
- * @Date: 2024-04-15 12:08:48
- * @LastEditors: bubao
- * @LastEditTime: 2024-10-15 22:13:58
- */
 const ERRCODE = {
 	0: {
 		status: 200,

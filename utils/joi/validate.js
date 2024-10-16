@@ -1,10 +1,3 @@
-/**
- * @Description:
- * @Author: bubao
- * @Date: 2022-04-25 13:51:40
- * @LastEditors: bubao
- * @LastEditTime: 2022-04-28 17:13:32
- */
 const pick = require("../method/pick");
 const MyError = require("../error/MyError");
 const Joi = require("joi");

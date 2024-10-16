@@ -33,7 +33,7 @@ export default [
 			],
 			"array-bracket-spacing": ["error", "never"],
 			// "node/no-missing-import": "off",
-			"no-multiple-empty-lines": "error",
+			"no-multiple-empty-lines": ["error", { "max": 1, "maxEOF": 1, "maxBOF": 1 }],
 			"no-var": "error",
 			// "no-template-curly-in-string": "off",
 			// "node/no-deprecated-api": "off",
